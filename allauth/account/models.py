@@ -86,12 +86,28 @@ class EmailConfirmation(models.Model):
     created = models.DateTimeField(verbose_name=_("created"), default=timezone.now)
     sent = models.DateTimeField(verbose_name=_("sent"), null=True)
     key = models.CharField(verbose_name=_("key"), max_length=64, unique=True)
+    attempts_to_confirm = models.PositiveIntegerField(
+        verbose_name=_("attempts to confirm"),
+        null=True,
+        default=0,
+    )
 
     objects = EmailConfirmationManager()
 
     class Meta:
         verbose_name = _("email confirmation")
         verbose_name_plural = _("email confirmations")
+
+    def __init__(self, *args, **kwargs):
+        super(EmailConfirmation, self).__init__(*args, **kwargs)
+
+        if app_settings.MAX_EMAIL_CONFIRMATION_ATTEMPTS:
+            def increment_attempts():
+                self.attempts_to_confirm += 1
+                self.save(update_fields=["attempts_to_confirm"])
+                return self.attempts_to_confirm
+
+            self.increment_attempts = increment_attempts
 
     def __str__(self):
         return "confirmation for %s" % self.email_address
@@ -130,6 +146,8 @@ class EmailConfirmation(models.Model):
             confirmation=self,
             signup=signup,
         )
+
+
 
 
 class EmailConfirmationHMAC:

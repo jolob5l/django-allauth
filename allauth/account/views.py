@@ -291,10 +291,20 @@ class ConfirmEmailView(TemplateResponseMixin, LogoutFunctionalityMixin, View):
     def get(self, *args, **kwargs):
         try:
             self.object = self.get_object()
-            if app_settings.CONFIRM_EMAIL_ON_GET:
-                return self.post(*args, **kwargs)
         except Http404:
             self.object = None
+
+        if self.object:
+            if app_settings.CONFIRM_EMAIL_ON_GET:
+                return self.post(*args, **kwargs)
+
+            max_attempts = app_settings.MAX_EMAIL_CONFIRMATION_ATTEMPTS
+            if max_attempts:
+                self.object.increment_attempts()
+                if max_attempts >= self.object.attempts_to_confirm:
+                    # exceeded the amount of attempts
+                    self.object = None
+
         ctx = self.get_context_data()
         return self.render_to_response(ctx)
 

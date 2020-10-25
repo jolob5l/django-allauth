@@ -345,24 +345,23 @@ class AppSettings(object):
         Determine how many times a user can access an email confirmation link
         and to try to confirm the registration
         """
-        import inspect
-
         from django.core.exceptions import ImproperlyConfigured
 
-        app_const_name = inspect.stack()[0][3]
-        const_value = self._setting(const_name, None)
+        app_const_name = 'MAX_EMAIL_CONFIRMATION_ATTEMPTS'
+        const_value = self._setting(app_const_name, None)
         if const_value:
-            full_const_name = f"{self.prefix}{app_const_name}"
             if not isinstance(const_value, int):
                 raise ImproperlyConfigured(
-                    f"{full_const_name} is expected to be an integer"
+                    f"{self.prefix}{app_const_name} "
+                    "is expected to be an integer"
                 )
             if const_value <= 0:
                 raise ImproperlyConfigured(
-                    f"{full_const_name} can not be less or equal to zero"
+                    f"{self.prefix}{app_const_name} "
+                    "can not be less or equal to zero"
                 )
 
-        return self._setting(app_const_name, None)
+        return const_value
 
 
 # Ugly? Guido recommends this himself ...

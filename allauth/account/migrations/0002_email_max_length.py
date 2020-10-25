@@ -6,6 +6,11 @@ from django.conf import settings
 
 UNIQUE_EMAIL = getattr(settings, "ACCOUNT_UNIQUE_EMAIL", True)
 EMAIL_MAX_LENGTH = getattr(settings, "ACCOUNT_EMAIL_MAX_LENGTH", 254)
+MAX_EMAIL_CONFIRMATION_ATTEMPTS = getattr(
+    settings,
+    "ACCOUNT_MAX_EMAIL_CONFIRMATION_ATTEMPTS",
+    None,
+)
 
 
 class Migration(migrations.Migration):
@@ -31,5 +36,18 @@ class Migration(migrations.Migration):
             migrations.AlterUniqueTogether(
                 name="emailaddress",
                 unique_together=set([("user", "email")]),
+            ),
+        ]
+
+    if MAX_EMAIL_CONFIRMATION_ATTEMPTS:
+        operations += [
+            migrations.AddField(
+                model_name="emailconfirmation",
+                name="attempts_to_confirm",
+                field=models.PositiveIntegerField(
+                    verbose_name="attempts to confirm",
+                    null=True,
+                    default=0,
+                )
             ),
         ]
